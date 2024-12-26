@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
+import os
 import subprocess
 import speedtest
 import re
 from colorama import Fore, Style, init
 from tqdm import tqdm
 import time
-import os
+import curses
+import sys
 
 # Initialize colorama for cross-platform color support
 init(autoreset=True)
@@ -17,7 +19,7 @@ def welcome_message():
     """
     print(Fore.CYAN + Style.BRIGHT + r"""
   __          _______  _   _ _____ ______ _______ 
-  \ \        / / ____|| \ | |_   _|  ____|__   __| 
+  \ \        / / ____|| \ | |_   _|  ____|__   __|
    \ \  /\  / / (___  |  \| | | | | |__     | |   
     \ \/  \/ / \___ \ | . ` | | | |  __|    | |   
      \  /\  /  ____) || |\  |_| |_| |____   | |   
@@ -28,15 +30,15 @@ def welcome_message():
 
 def get_wifi_details():
     """
-    Get Wi-Fi details such as link speed and signal quality using netsh (Windows).
+    Get Wi-Fi details such as link speed and signal quality using iwconfig.
     """
     try:
-        output = subprocess.check_output("netsh wlan show interfaces", shell=True, text=True)
+        output = subprocess.check_output("iwconfig", shell=True, text=True)
         wifi_details = {}
         
-        # Parse the output for Link Speed (Wi-Fi speed) and Signal Level
-        bitrate_match = re.search(r"Link Speed\s*:\s*(\d+ \S+)", output)
-        signal_match = re.search(r"Signal\s*:\s*(\d+)", output)
+        # Parse the output for Bit Rate (Wi-Fi speed) and Signal Level
+        bitrate_match = re.search(r"Bit Rate[:=] (\d+ \S+)", output)
+        signal_match = re.search(r"Signal level[:=] (-?\d+ dBm)", output)
         
         if bitrate_match:
             wifi_details['bit_rate'] = bitrate_match.group(1)
@@ -44,7 +46,7 @@ def get_wifi_details():
             wifi_details['bit_rate'] = "Unknown"
         
         if signal_match:
-            wifi_details['signal_level'] = f"{signal_match.group(1)}%"
+            wifi_details['signal_level'] = signal_match.group(1)
         else:
             wifi_details['signal_level'] = "Unknown"
         
@@ -54,7 +56,7 @@ def get_wifi_details():
 
 def get_speedtest_results():
     """
-    Get download speed, upload speed, and ping using speedtest-cli.
+    Get download speed, upload speed, and jitter using speedtest-cli.
     """
     try:
         st = speedtest.Speedtest()
@@ -108,23 +110,29 @@ def display_results(wifi_details, speed_results):
 def check_and_install():
     """
     Ensure the script is executable and moved to /usr/local/bin as 'wsniet'.
-    This is specific to Windows and won't affect other systems.
     """
     script_path = os.path.realpath(__file__)
     script_name = "wsniet"
+    target_path = f"/usr/local/bin/{script_name}"
 
-    # Ensure the script is executable
-    try:
-        subprocess.run(["chmod", "+x", script_path], check=True)
-        print(Fore.GREEN + f"Tool is ready to run: {script_name}")
-    except Exception as e:
-        print(Fore.RED + f"Error during setup: {e}")
+    # Check if already installed
+    if not os.access(target_path, os.X_OK):
+        print(Fore.YELLOW + "Setting up the tool for system-wide usage...")
+        try:
+            # Make executable
+            subprocess.run(["chmod", "+x", script_path], check=True)
+
+            # Move to /usr/local/bin
+            subprocess.run(["sudo", "mv", script_path, target_path], check=True)
+
+            print(Fore.GREEN + f"Tool installed successfully! Use '{script_name}' to run.")
+            sys.exit(0)  # Exit after installation
+        except Exception as e:
+            print(Fore.RED + f"Error during setup: {e}")
+            sys.exit(1)
 
 if __name__ == "__main__":
-    check_and_install()  # Check if the script is set up
+    check_and_install()  # Ensure the script is set up
     welcome_message()  # Display welcome message
     
     wifi_details = get_wifi_details()  # Get Wi-Fi details
-    speed_results = get_speedtest_results()  # Run speed test
-    
-    display_results(wifi_details, speed_results)  # Display the results
