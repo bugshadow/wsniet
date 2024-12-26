@@ -19,11 +19,6 @@ WSNIET is a powerful Python-based Wi-Fi speed testing tool that provides detaile
 
 ## Installation
 
-### Required Python packages
-```bash
-pip install -r requirements.txt
-```
-
 ### Installation Steps
 
 1. Clone the repository:
@@ -35,6 +30,11 @@ git clone https://github.com/bugshadow/wsniet.git
 ```bash
 cd wsniet
 ```
+### Required Python packages
+```bash
+pip install -r requirements.txt
+```
+
 
 3. Make the script executable:
 ```bash
