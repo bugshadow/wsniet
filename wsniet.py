@@ -25,7 +25,8 @@ def welcome_message():
       \/  \/  |_____/ |_| \_|_____|______|  |_|   
 """)
     print(Fore.GREEN + "Welcome to the Wi-Fi Speed Test Tool (WSNIET)!")
-    print(Fore.YELLOW + "Powered by Python\n")
+    print(Fore.BLACK + "Powered by Python\n")
+    print(Fore.YELLOW + "OMAR BOUHADDACH\n")
 
 def get_wifi_details():
     """
