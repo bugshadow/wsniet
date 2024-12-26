@@ -7,7 +7,6 @@ import re
 from colorama import Fore, Style, init
 from tqdm import tqdm
 import time
-import curses
 import sys
 
 # Initialize colorama for cross-platform color support
@@ -34,6 +33,9 @@ def get_wifi_details():
     """
     try:
         output = subprocess.check_output("iwconfig", shell=True, text=True)
+        if "no wireless extensions" in output:
+            return {"error": "No wireless extensions found. Please check your Wi-Fi interface."}
+        
         wifi_details = {}
         
         # Parse the output for Bit Rate (Wi-Fi speed) and Signal Level
@@ -56,7 +58,7 @@ def get_wifi_details():
 
 def get_speedtest_results():
     """
-    Get download speed, upload speed, and jitter using speedtest-cli.
+    Get download speed, upload speed, and ping using speedtest-cli.
     """
     try:
         st = speedtest.Speedtest()
@@ -136,3 +138,6 @@ if __name__ == "__main__":
     welcome_message()  # Display welcome message
     
     wifi_details = get_wifi_details()  # Get Wi-Fi details
+    speed_results = get_speedtest_results()  # Run speed test
+    
+    display_results(wifi_details, speed_results)  # Display the results
